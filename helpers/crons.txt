@@ -1,0 +1,3 @@
+0 0 * * * /opt/oplog/bin/mailerrs.py > /dev/null 2>&1
+*/5 * * * * chmod +r /opt/oplog/logs/*.log> /dev/null 2>&1
+* * * * * /opt/oplog/bin/xmppusher > /dev/null 2>&1

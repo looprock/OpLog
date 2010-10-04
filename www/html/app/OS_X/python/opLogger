@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+# version: 0.2
+import xmlrpclib, os, sys, commands, re
+
+def checkLog():
+  cachefile = "/tmp/opLogger.cache"
+  server = xmlrpclib.Server('http://[some.host.com]/oplog/cgi-bin/oplog_server.py')
+  lastmsg = server.getanswer("1")[0][0]
+
+  result = os.path.exists(cachefile)
+
+  if result != 1:
+    cachehandle = open(cachefile, 'w')
+    cachehandle.write(str(lastmsg))
+    cachehandle.close()
+    regcommand = "echo 'opLogger initiallized, you should get updates from now on.' | /usr/local/bin/growlnotify 'opLogger'"
+    os.system(regcommand)
+    sys.exit(0)
+
+  cachehandle = open(cachefile, 'r')
+  currentmsg = cachehandle.readline()
+  cachehandle.close()
+
+  if int(currentmsg) != lastmsg:
+    newrange = []
+    for i in range((int(currentmsg) + 1),lastmsg):
+        newrange.append(i)
+
+    if len(newrange) > 10:
+        lowrange = lastmsg - 10
+    else:
+        lowrange = lastmsg - len(newrange)
+
+    for i in range(lowrange, lastmsg + 1):
+        foo = server.getsubject(str(i))
+        oplogcmd = "echo '" + foo[0][0] + "' | /usr/local/bin/growlnotify 'opLogger'"
+        os.system(oplogcmd)
+
+    cachehandle = open(cachefile, 'w')
+    cachehandle.write(str(lastmsg))
+    cachehandle.close()
+
+#x = commands.getoutput('/usr/bin/host tool.yav4.com')
+#sstr="NXDOMAIN"
+#p = re.compile(sstr, re.IGNORECASE)
+#toolchk="T"
+#for line in x.split("\n"):
+#  result = re.search(p, line)
+#  if result != None:
+#     toolchk="F"     
+
+#if toolchk == "T":
+
+checkLog()

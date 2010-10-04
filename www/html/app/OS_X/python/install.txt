@@ -1,0 +1,44 @@
+Install growl:
+http://growl.info/downloads.php
+
+with the image still mounted from a terminal, run:
+cd /Volumes/Growl\ 1.1.1/Extras/growlnotify/
+sudo install.sh
+
+copy opLogger somewhere and set cachefile to something appropriate
+
+set up a launchd entry:
+
+create a file ~/Library/LaunchAgents/net.home.oplog.[username].plist
+replace [username] with your username
+
+with the contents:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+       <key>Label</key>
+       <string>net.home.oplog.[username]</string>
+       <key>UserName</key>
+       <string>[username]</string>
+       <key>ProgramArguments</key>
+       <array>
+               <string>/path/to/opLogger</string>
+       </array>
+       <key>StartInterval</key>
+       <integer>60</integer>
+</dict>
+</plist>
+
+replacing [username] with your username and /path/to/opLogger
+you can also modify the time between runs by changing the <integer>
+
+run:
+launchctl load ~/Library/LaunchAgents/net.home.oplog.[username].plist
+replace [username] with your username
+
+You should see a registration message the first time it fires off.
+
+To test the rest, you can de-increment the number in the cache file after the first time it runs to generate messages.

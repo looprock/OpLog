@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+# version: 0.2
+import xmpp, time, xmlrpclib, os, sys, re, os, difflib, smtplib, string, datetime
+from email.MIMEText import MIMEText
+sys.path.append('/opt/oplog/conf')
+import oplog
+
+# set up handler for emailing errors
+def errmailer(subtype, errString):
+  subject="opLog Error: " + subtype
+  server = smtplib.SMTP(oplog.mailhost)
+  msg = MIMEText(errString)
+  msg["Subject"] = subject
+  msg["From"]    = oplog.mailfrom
+  msg["To"]      = oplog.mailerrto
+
+  server.sendmail(oplog.mailfrom, [oplog.mailerrto], msg.as_string())
+  server.quit()
+
+cachefile = oplog.tmpdir + "pyLogger.cache"
+
+# as the soap service what the last message ID is
+server = xmlrpclib.Server(oplog.baseurl + 'cgi-bin/oplog_server.py')
+lastmsg = server.getanswer("1")[0][0]
+
+result = os.path.exists(cachefile)
+
+# create a cache file if one doesn't exist
+# get the last message ID we looked at
+if result != 1:
+    cachehandle = open(cachefile, 'w')
+    cachehandle.write(str(lastmsg))
+    cachehandle.close()
+    sys.exit(0)
+
+cachehandle = open(cachefile, 'r')
+currentmsg = cachehandle.readline()
+cachehandle.close()
+
+# if the cached message ID and message ID from the soap service don't match
+# construct a list of all new messages
+if int(currentmsg) != lastmsg:
+    newrange = []
+    for i in range((int(currentmsg) + 1),lastmsg):
+        newrange.append(i)
+    # if there are more than 10 messages, only get the last 10
+    # I don't want to get TOTALLY swamped
+    if len(newrange) > 10:
+        lowrange = lastmsg - 10
+    else:
+        lowrange = lastmsg - len(newrange)
+    # get the subject of all the new messages up to 10
+    for i in range(lowrange, lastmsg + 1):
+        foo = server.getsubject(str(i))
+
+	# XMPP addition
+
+	# if I'm using a stakeholder DB, get the list of addresses I send to
+        if oplog.notify_db_enabled == "true":
+	  import MySQLdb
+	  if oplog.notify_db_port == "3306":
+	    conn = MySQLdb.connect(host=oplog.notify_db_host, user=oplog.notify_db_username, passwd=oplog.notify_db_password, db=oplog.notify_db_name)
+	  else:
+	    conn = MySQLdb.connect(host=oplog.notify_db_host, port=oplog.notify_db_port, user=oplog.notify_db_username, passwd=oplog.notify_db_password, db=oplog.notify_db_name)
+	  curs = conn.cursor()
+	  curs.execute("select stakeholder from stakeholders where stype='xmppnotify' and skey='ilog'")
+	  xmpp_notify_list = curs.fetchall()
+	  conn.close()
+	# or from a the list in oplog.py
+        else:
+	  xmpp_notify_list = oplog.xmpp_notified
+	
+	# then send the message to each 
+	for xmppnotified in xmpp_notify_list:
+	  if oplog.notify_db_enabled == "true":
+	    tojid=str(xmppnotified[0])
+	  else:
+	    tojid=str(xmppnotified)
+	  text = foo[0][0] + " \n" + oplog.baseurl + "cgi-bin/index.py?action=show&msgid=" + (str(i))
+	  jid=xmpp.protocol.JID(oplog.xmpp_username)
+	  cl=xmpp.Client(jid.getDomain(),debug=[])
+	  con=cl.connect(secure=0)
+	  # if there are problems send that info the error handler
+	  if not con:
+	      errmailer('XMPP transmit error','could not connect!')
+	      sys.exit()
+	  auth=cl.auth(jid.getNode(),oplog.xmpp_password,sasl=1)
+	  if not auth:
+	      errmailer('XMPP transmit error','could not authenticate!')
+	      sys.exit()
+	  id=cl.send(xmpp.protocol.Message(tojid,text))
+	  cl.disconnect()
+    # update the cache file with the latest message ID I posted
+    cachehandle = open(cachefile, 'w')
+    cachehandle.write(str(lastmsg))
+    cachehandle.close()
