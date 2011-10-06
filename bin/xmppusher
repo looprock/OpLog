@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# version: 0.2
+# version: 0.3
 import xmpp, time, xmlrpclib, os, sys, re, os, difflib, smtplib, string, datetime
 from email.MIMEText import MIMEText
 sys.path.append('/opt/oplog/conf')
@@ -79,12 +79,20 @@ if int(currentmsg) != lastmsg:
 	  text = foo[0][0] + " \n" + oplog.baseurl + "cgi-bin/index.py?action=show&msgid=" + (str(i))
 	  jid=xmpp.protocol.JID(oplog.xmpp_username)
 	  cl=xmpp.Client(jid.getDomain(),debug=[])
-	  con=cl.connect(secure=0)
+
+          #push stdout to /dev/null to avoid weird warning due to DNS
+          saveout = sys.stdout
+          sys.stdout = open('/dev/null', 'w')
+	  con=cl.connect(secure=oplog.xmpp_security)
+          #re-enable stdout
+          sys.stdout.close()
+          sys.stdout = saveout
+
 	  # if there are problems send that info the error handler
 	  if not con:
 	      errmailer('XMPP transmit error','could not connect!')
 	      sys.exit()
-	  auth=cl.auth(jid.getNode(),oplog.xmpp_password,sasl=1)
+	  auth=cl.auth(jid.getNode(),oplog.xmpp_password,sasl=oplog.xmpp_sasl)
 	  if not auth:
 	      errmailer('XMPP transmit error','could not authenticate!')
 	      sys.exit()

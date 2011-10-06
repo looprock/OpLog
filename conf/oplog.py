@@ -8,6 +8,11 @@ basedir = "/opt/oplog/"
 baseurl = "http://[your.url.here]/oplog/"
 # temp location
 tmpdir = basedir + 'tmp/'
+# where to store mime attachments
+attachdir = basedir + 'www/html/attachments/'
+
+# enable/disable text logging
+txtlog = "T"
 
 # the first day oplog will show in it's day view. When you hit this date
 # no "<" arrow will be presented. This can also be used to mask testing
@@ -47,6 +52,8 @@ xmpp_notified = ['user@jabber.org', 'user@livejournal.com']
 # XMPP username and password of account that will be doing the IMing
 xmpp_username = "nokmaps@jabber.org/Work"
 xmpp_password = "nmpasswd"
+xmpp_sasl = 1
+xmpp_security = 0
 
 # Mail settings
 
