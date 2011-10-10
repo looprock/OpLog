@@ -30,7 +30,7 @@ cachefile = oplog.tmpdir + "pyLogger.cache"
 
 # as the soap service what the last message ID is
 server = xmlrpclib.Server(oplog.baseurl + 'cgi-bin/oplog_server.py')
-lastmsg = server.getanswer(queue)[0][0]
+lastmsg = server.getlastmsg(queue)[0][0]
 
 result = os.path.exists(cachefile)
 
@@ -85,14 +85,17 @@ if int(currentmsg) != lastmsg:
 	    tojid=str(xmppnotified[0])
 	  else:
 	    tojid=str(xmppnotified)
-	  text = foo[0][0] + " \n" + oplog.baseurl + "cgi-bin/index.py?action=show&msgid=" + (str(i))
+	  text = "%s \n%scgi-bin/index.py?action=show&queue=%s&msgid=%s" % (foo[0][0],oplog.baseurl,queue,str(i))
 	  jid=xmpp.protocol.JID(oplog.xmpp_username)
 	  cl=xmpp.Client(jid.getDomain(),debug=[])
 
           #push stdout to /dev/null to avoid weird warning due to DNS
           saveout = sys.stdout
           sys.stdout = open('/dev/null', 'w')
-	  con=cl.connect(secure=oplog.xmpp_security)
+          if oplog.xmpp_security == 'T':
+                con=cl.connect(secure=1)
+          else:
+                con=cl.connect()
           #re-enable stdout
           sys.stdout.close()
           sys.stdout = saveout
