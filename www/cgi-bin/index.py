@@ -102,7 +102,7 @@ def default():
     if len(result[n][4]) > length:
        print "<p><pre>" + result[n][4][:length] + " ... </pre></p>\n"
        print "<b> ... [ TRUNCATED : </b></p>"
-       print "<b><a href=\"index.py?action=show&msgid=" + str(result[n][5]) + "\">View Full record</a> ] </b><br>\n"
+       print "<b><a href=\"index.py?action=show&queue=" + queue + "&msgid=" + str(result[n][5]) + "\">View Full record</a> ] </b><br>\n"
     else:
        print "<pre>" + result[n][4] + "</pre><p>\n"
   footer()
@@ -188,7 +188,7 @@ def day():
         print "<b><font size=4>-- " + recordinfo[0][0] + "</font></b><br>\n"
         print "<b>From: " + recordinfo[0][1] + "</b><br>\n"
         print "<b>Received Date:</b> " + recordinfo[0][2].strftime("%A %B %d %I:%M:%S %p%Y") + " (Sent: " + recordinfo[0][3] + ")<br>\n"
-        print "<a href=\"index.py?action=show&msgid=" + str(recordinfo[0][5]) + "\">View Full record</a><br>\n"
+        print "<a href=\"index.py?action=show&queue=" + queue + "&msgid=" + str(recordinfo[0][5]) + "\">View Full record</a><br>\n"
      footer()
   # if not, sorry!
   else:
@@ -230,7 +230,7 @@ def searchsub():
        print "<b><font size=4>-- " + recordinfo[0] + "</font></b><br>\n"
        print "<b>From: " + recordinfo[1] + "</b><br>\n"
        print "<b>Received Date:</b> " + recordinfo[2].strftime("%A %B %d %I:%M:%S %p%Y") + " (Sent: " + recordinfo[3] + ")<br>\n"
-       print "<a href=\"index.py?action=show&msgid=" + str(recordinfo[5]) + "\">View Full record</a><br>\n"
+       print "<a href=\"index.py?action=show&queue=" + queue + "&msgid=" + str(recordinfo[5]) + "\">View Full record</a><br>\n"
   footer()
 
 # display the helper apps page
