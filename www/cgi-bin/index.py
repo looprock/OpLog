@@ -5,10 +5,9 @@ import cgi, MySQLdb, datetime, time, SimpleXMLRPCServer, sys
 sys.path.append('/opt/oplog/conf')
 import oplog
 
-if oplog.db_port == "3306":
-   conn = MySQLdb.connect(host=oplog.db_host, user=oplog.db_username, passwd=oplog.db_password, db=oplog.db_name)
-else:
-   conn = MySQLdb.connect(host=oplog.db_host, port=oplog.db_port, user=oplog.db_username, passwd=oplog.db_password, db=oplog.db_name)
+# set up the database
+import opdb
+opdb = opdb.opdb()
 
 # get all the elements passed to us via GET or POSTs
 form = cgi.FieldStorage()
@@ -24,19 +23,23 @@ defaultlinkcolor = "#999999"
 
 # these display at the top and bottom of all pages
 def mainlinks():
-  print """<table border=0 cellspacing=1 cols=2 width=100%><tr>\n
-   <td align=left>
-   <a href=\"index.py\">Home</a> 
-   | <a href=\"?action=about\">About</a>
-   | <a href=\"?action=apps">Support Applications</a>
-   | <a href=\"?action=day\">View By Day</a> 
-   | <a href=\"?action=search\">Search</a>
-   | <a href=\"?action=textlogs\">Text Logs</a> 
-   | <a href=\"?action=feed\">RSS Feed</a>
-  </td></tr></table><p>"""
+   print "<table border=0 cellspacing=1 cols=2 width=100%><tr>\n<td align=left>"
+   print "<a href=\"index.py?queue=%s\">Home</a>" % (str(queue))
+   print '| <a href="?action=about&queue=%s">About</a>' % (str(queue))
+   print '| <a href="?action=apps&queue=%s">Support Applications</a>' % (str(queue))
+   print '| <a href="?action=day&queue=%s">View By Day</a>' % (str(queue))
+   print '| <a href="?action=search&queue=%s">Search</a>' % (str(queue))
+   #print '| <a href="?action=textlogs&queue=%s">Text Logs</a>' % (str(queue))
+   print '| <a href="?action=feed&queue=%s">RSS Feed</a>' % (str(queue))
+   print "</td></tr></table><p>"
 
 # shared top and bottom elements of all pages
 def header():
+  print "<b>Queues:</b>"
+  qs = opdb.select("select * from queues")
+  for x in range(0,len(qs)):
+        print "<a href=\"index.py?queue=%s\">%s</a> | " % (str(qs[x][0]),qs[x][2])
+  print "<p>"
   mainlinks()
   print "<table border=0 cellpadding=0 cellspacing=0 width=100%>"
   print "<tr><td width=5%>&nbsp;</td>"
@@ -48,7 +51,7 @@ def footer():
 
 # the text log display page content
 def textlogs():
-  print "<h1>Text Logs</h1>"
+  print "<h1>%s: Text Logs</h1>" % (qtitle)
   header()
   print "<p><a href=\"../logs/opLog-" + str(todate) + ".log\">Current Text Log</a></p>\n"
   print "<p><a href=\"../logs/\">All Text Logs</a></p>\n"
@@ -81,12 +84,11 @@ def about():
 # "index" page content, in general what pops up if you don't add an action= to
 # the index.py url
 def default():
-  print "<h1>Last 10 Messages</h1>"
+  print "<h1>%s: Last 10 Messages</h1>" % (qtitle)
   header()
   # select the 10 most current entries from oplog db and show them
-  curs = conn.cursor()
-  curs.execute("select msgsubject, mailfrom, recdate, maildate, msgbody, recordid from maillogs where mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%' order by recdate desc LIMIT 10")
-  result = curs.fetchall()
+  sql ="select msgsubject, mailfrom, recdate, maildate, msgbody, id from " + dbname + " where mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%' order by recdate desc LIMIT 10"
+  result = opdb.select(sql)
   # we already know there will be 10 entries in the dictionary, so we can cheat
   for n in range (0, 9):
     print "<hr width=50% align=left>\n"
@@ -103,7 +105,6 @@ def default():
        print "<b><a href=\"index.py?action=show&msgid=" + str(result[n][5]) + "\">View Full record</a> ] </b><br>\n"
     else:
        print "<pre>" + result[n][4] + "</pre><p>\n"
-  conn.close()
   footer()
 
 # this produces the RSS feed
@@ -116,9 +117,8 @@ def feed():
  print "<link>http://tool.yav4.com/iLog</link>\n"
  print "<copyright>this info is confidential yo!</copyright>\n"
  # select the 10 most current entries from oplog db and show them
- curs = conn.cursor()
- curs.execute("select msgsubject, mailfrom, recdate, maildate, msgbody, recordid from maillogs where mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%' order by recdate desc LIMIT 10")
- result = curs.fetchall()
+ sql = "select msgsubject, mailfrom, recdate, maildate, msgbody, id from " + dbname + " where mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%' order by recdate desc LIMIT 10"
+ result = opdb.select(sql)
  # we already know there will be 10 entries in the dictionary, so we can cheat
  for n in range (0, 9):
    print "<item>\n"
@@ -129,7 +129,6 @@ def feed():
    print "</link>\n"
    print "<pubDate>" + result[n][2].strftime("%A %B %d %I:%M:%S %p %Y") + "</pubDate>\n"
    print "</item>\n"
- conn.close()
  print "</channel>\n"
  print "</rss>\n"
 
@@ -142,28 +141,22 @@ def show():
   else :
     # get the mesage ID from the GET to the cgi
     msgid = form['msgid'].value
-    print "<h1>Messages Number: " + msgid + "</h1>"
+    print "<h1>%s: Messages Number - %s</h1>" % (qtitle, msgid)
     header()
     # select the record for that message ID and display it
-    curs = conn.cursor()
-    curs.execute("select msgsubject, mailfrom, recdate, maildate, msgbody, recordid from maillogs where recordid=" + msgid + " and mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%'")
-    result = curs.fetchall()
+    sql = "select msgsubject, mailfrom, recdate, maildate, msgbody, id from " + dbname + " where id=" + msgid + " and mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%'"
+    result = opdb.select(sql)
     print "<hr width=50% align=left>\n"
     print "<b><font size=4>-- " + result[0][0] + "</font></b><br>\n"
     print "<b>From: " + result[0][1] + "</b><br>\n"
     print "<b>Received Date:</b> " + result[0][2].strftime("%A %B %d %I:%M:%S %p %Y") + " (Sent: " + result[0][3] + ")<br>\n"
     print "<b>Message Body:</b><br>\n"
     print "<pre>" + result[0][4] + "</pre><p>\n"
-    conn.close()
     footer()
 
 # display messages by day. 
 # if no date provided, assume today
 def day():
-  if test_form < 2:
-     dstamp = time.strftime("%Y-%m-%d")
-  else :
-     dstamp = form['dstamp'].value
   # I could have saved myself a bit of grief here by using teh "%Y-%m-%d" for
   # everything, but live and learn 
   dparts = dstamp.split("-")
@@ -171,33 +164,31 @@ def day():
   # get the +1 and -1 dates for the "<" and ">" links
   minusoneday = reqday + datetime.timedelta(days=-1)
   plusoneday = reqday + datetime.timedelta(days=1)
-  print "<center><h1>"
+  print "<center><h1>%s: " % (qtitle)
   # don't display a "<" once you hit the oplog_start_date
   if dstamp != oplog.oplog_start_date:
-    print "<a href=\"?action=day&dstamp=" + str(minusoneday) + "\">< </a> "
+    print "<a href=\"?action=day&queue=" + str(queue) + "&dstamp=" + str(minusoneday) + "\">< </a> "
   print dstamp
   # don't display a ">" if the date matches today, nothing will be there!
   if dstamp != time.strftime("%Y-%m-%d"):
-    print " <a href=\"?action=day&dstamp=" + str(plusoneday) + "\">> </a> "
+    print " <a href=\"?action=day&queue=" + str(queue) + "&dstamp=" + str(plusoneday) + "\">> </a> "
   print "</h1></center>"
   header()
   print "<br>"
   # select all the record IDs for the requested date
-  curs = conn.cursor()
-  curs.execute("select recordid from maillogs where mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%' and recdate like '%" + dstamp + "%' order by recdate")
-  result = curs.fetchall()
+  sql = "select id from " + dbname + " where mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%' and recdate like '%" + dstamp + "%' order by recdate"
+  result = opdb.select(sql)
   if len(result) != 0:
      # if there are records, display them
      for msgid in result:
         resid = str(msgid[0])
-        curs.execute("select msgsubject, mailfrom, recdate, maildate, msgbody, recordid from maillogs where recordid='" + resid + "' order by recordid")
-        recordinfo = curs.fetchall()
+        sql = "select msgsubject, mailfrom, recdate, maildate, msgbody, id from " + dbname + " where id='" + resid + "' order by id"
+        recordinfo = opdb.select(sql)
         print "<hr width=50% align=left>\n"
         print "<b><font size=4>-- " + recordinfo[0][0] + "</font></b><br>\n"
         print "<b>From: " + recordinfo[0][1] + "</b><br>\n"
         print "<b>Received Date:</b> " + recordinfo[0][2].strftime("%A %B %d %I:%M:%S %p%Y") + " (Sent: " + recordinfo[0][3] + ")<br>\n"
         print "<a href=\"index.py?action=show&msgid=" + str(recordinfo[0][5]) + "\">View Full record</a><br>\n"
-     conn.close()
      footer()
   # if not, sorry!
   else:
@@ -207,7 +198,7 @@ def day():
 def search():
   print "<form action=\"index.py\" method=\"post\">\n"
   print "<input type=hidden name=action value=searchsub>"
-  print "<h1>Search Logs:</h1>\n"
+  print "<h1>%s Search:</h1>\n" % (qtitle)
   mainlinks()
   print "<INPUT TYPE=text SIZE=30 MAXLENGTH=100 NAME=keyword><br>\n"
   print "[ Date search format: Y-M-D h:m:s ]<p>\n"
@@ -223,27 +214,23 @@ def searchsub():
   keyword = keyword.replace('>', '&gt;')
   keyword = keyword.replace('"', '&quot;')
   keyword = keyword.replace("'", "&#039;")
-  print "<h1>Searching for: " + keyword + "</h1><br>\n"
+  print "<h1>%s: Results for - %s</h1><br>\n" % (qtitle, keyword)
   header()
   # select anything and everything that might match
-  select0 = "select recordid from maillogs where recdate like '%" + keyword + "%' or mailfrom like '%" + keyword + "%' or msgbody like '%" + keyword + "%' or msgsubject like '%" + keyword + "%' or maildate like '%" + keyword + "%' order by recdate desc"
-  curs = conn.cursor()
-  curs.execute(select0)
-  recordids = curs.fetchall()
+  select0 = "select id from " + dbname + " where recdate like '%" + keyword + "%' or mailfrom like '%" + keyword + "%' or msgbody like '%" + keyword + "%' or msgsubject like '%" + keyword + "%' or maildate like '%" + keyword + "%' order by recdate desc"
+  recordids = opdb.select(select0)
   # how many things did we find?
   print "<p>Results: <b>" + str(len(recordids)) + "</b><p>\n"
   # as long as there are some, show them
   if len(recordids) != 0:
-     select1 = "select msgsubject, mailfrom, recdate, maildate, msgbody, recordid from maillogs where recdate like '%" + keyword + "%' or mailfrom like '%" + keyword + "%' or msgbody like '%" + keyword + "%' or msgsubject like '%" + keyword + "%' or maildate like '%" + keyword + "%' order by recdate desc"
-     curs.execute(select1)
-     results = curs.fetchall()
+     select1 = "select msgsubject, mailfrom, recdate, maildate, msgbody, id from " + dbname + " where recdate like '%" + keyword + "%' or mailfrom like '%" + keyword + "%' or msgbody like '%" + keyword + "%' or msgsubject like '%" + keyword + "%' or maildate like '%" + keyword + "%' order by recdate desc"
+     results = opdb.select(select1)
      for recordinfo in results:
        print "<hr width=50% align=left>\n"
        print "<b><font size=4>-- " + recordinfo[0] + "</font></b><br>\n"
        print "<b>From: " + recordinfo[1] + "</b><br>\n"
        print "<b>Received Date:</b> " + recordinfo[2].strftime("%A %B %d %I:%M:%S %p%Y") + " (Sent: " + recordinfo[3] + ")<br>\n"
        print "<a href=\"index.py?action=show&msgid=" + str(recordinfo[5]) + "\">View Full record</a><br>\n"
-  conn.close()
   footer()
 
 # display the helper apps page
@@ -267,10 +254,24 @@ def apps():
 
 
 # if there aren't any args passed via GET, assume they just want the index page
-if test_form < 1:
-  action = "default"
+if 'action' in form:
+	action = form['action'].value
 else :
-  action = form['action'].value
+	action = "default"
+
+if 'queue' in form:
+	queue = form['queue'].value
+else:
+	queue = 1
+
+if 'dstamp' in form:
+	dstamp = form['dstamp'].value
+else :
+	dstamp = time.strftime("%Y-%m-%d")
+
+
+dbname = opdb.getdbbyid(queue)
+qtitle = opdb.gettitlebyid(queue)
 
 # we don't want to diplay a regular html header to an rss reader
 if action != "feed" and action != "client":
@@ -313,3 +314,6 @@ if action != "feed" and action != "client":
   print "</div>" 
   print "</body>"
   print "</html>"
+
+# close out the db
+opdb.close()

@@ -1,11 +1,13 @@
 #!/usr/bin/env python
-# version: 0.2
+# version: 0.3
 import xmlrpclib, os, sys, commands, re
+
+queue = 1
 
 def checkLog():
   cachefile = "/tmp/opLogger.cache"
   server = xmlrpclib.Server('http://[some.host.com]/oplog/cgi-bin/oplog_server.py')
-  lastmsg = server.getanswer("1")[0][0]
+  lastmsg = server.getanswer(queue)[0][0]
 
   result = os.path.exists(cachefile)
 
@@ -32,7 +34,7 @@ def checkLog():
         lowrange = lastmsg - len(newrange)
 
     for i in range(lowrange, lastmsg + 1):
-        foo = server.getsubject(str(i))
+        foo = server.getsubject(queue, str(i))
         oplogcmd = "echo '" + foo[0][0] + "' | /usr/local/bin/growlnotify 'opLogger'"
         os.system(oplogcmd)
 

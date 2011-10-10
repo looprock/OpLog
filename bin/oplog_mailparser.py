@@ -5,6 +5,14 @@
 import sys, email, re, os, difflib, smtplib, string, datetime, mimetypes
 from time import gmtime, strftime
 
+errMsg = 'Usage: ' + sys.argv[0] + ' [queue ID]'
+testres = len(sys.argv)
+if testres < 2:
+ print errMsg
+ sys.exit(1)
+
+mid = sys.argv[1]
+
 debugmode = "F"
 
 if debugmode != "T":
@@ -12,6 +20,7 @@ if debugmode != "T":
 	sys.path.append('/opt/oplog/conf')
 
 import oplog
+import opdb
 
 logdate = strftime("%Y%m%d", gmtime())
 oplogfile = oplog.basedir + "logs/opLog-" + logdate + ".log"
@@ -88,17 +97,15 @@ payload = payload.replace("'", "&#039;")
 
 # write the message to the database
 if debugmode != "T":
-	import MySQLdb
-	if oplog.db_port == "3306":
-		conn = MySQLdb.connect(host=oplog.db_host, user=oplog.db_username, passwd=oplog.db_password, db=oplog.db_name)
-	else:
-		conn = MySQLdb.connect(host=oplog.db_host, port=oplog.db_port, user=oplog.db_username, passwd=oplog.db_password, db=oplog.db_name)
-	curs = conn.cursor()
-	curs.execute('insert maillogs (maildate, mailfrom, msgsubject, msgbody) values (%s, %s, %s, %s)', (msgdate, msgfrom, msgsubject, payload))
-	conn.commit()
-	conn.close()
+	opdb = opdb.opdb()
+	dbname = opdb.getdbbyid(mid)
+	sql = "insert %s (maildate, mailfrom, msgsubject, msgbody) values ('%s', '%s', '%s', '%s')" % (dbname, msgdate, msgfrom, msgsubject, payload)
+	opdb.insert(sql)
+	opdb.close()
 
-if oplog.txtlog == 'T':
+txtlog = 'F'
+#if oplog.txtlog == 'T':
+if txtlog == 'T':
 	# write the message to the text log
 	# we're reconstructing variables here because the formatting is different
 	logsubject = msg['Subject']

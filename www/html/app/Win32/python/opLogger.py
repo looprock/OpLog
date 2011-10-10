@@ -2,9 +2,11 @@
 # version: 0.2
 import xmlrpclib, PySnarl, os, sys
 
+queue = 1
+
 cachefile = "C:\opLog\cache.txt"
 server = xmlrpclib.Server('http://[some.host.com]/oplog/cgi-bin/oplog_server.py')
-lastmsg = server.getanswer("1")[0][0]
+lastmsg = server.getanswer(queue)[0][0]
 
 
 result = os.path.exists(cachefile)
@@ -31,7 +33,7 @@ if int(currentmsg) != lastmsg:
         lowrange = lastmsg - len(newrange)
 
     for i in range(lowrange, lastmsg + 1):
-        foo = server.getsubject(str(i))
+        foo = server.getsubject(queue, str(i))
         id = PySnarl.snShowMessage("opLog Message", foo[0][0], timeout=5)
 
     cachehandle = open(cachefile, 'w')

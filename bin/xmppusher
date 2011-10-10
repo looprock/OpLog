@@ -2,6 +2,15 @@
 # version: 0.3
 import xmpp, time, xmlrpclib, os, sys, re, os, difflib, smtplib, string, datetime
 from email.MIMEText import MIMEText
+
+errMsg = 'Usage: ' + sys.argv[0] + ' [queue ID]'
+testres = len(sys.argv)
+if testres < 2:
+ print errMsg
+ sys.exit(1)
+
+queue = sys.argv[1]
+
 sys.path.append('/opt/oplog/conf')
 import oplog
 
@@ -21,7 +30,7 @@ cachefile = oplog.tmpdir + "pyLogger.cache"
 
 # as the soap service what the last message ID is
 server = xmlrpclib.Server(oplog.baseurl + 'cgi-bin/oplog_server.py')
-lastmsg = server.getanswer("1")[0][0]
+lastmsg = server.getanswer(queue)[0][0]
 
 result = os.path.exists(cachefile)
 
@@ -51,7 +60,7 @@ if int(currentmsg) != lastmsg:
         lowrange = lastmsg - len(newrange)
     # get the subject of all the new messages up to 10
     for i in range(lowrange, lastmsg + 1):
-        foo = server.getsubject(str(i))
+        foo = server.getsubject(queue, str(i))
 
 	# XMPP addition
 

@@ -11,9 +11,6 @@ tmpdir = basedir + 'tmp/'
 # where to store mime attachments
 attachdir = basedir + 'www/html/attachments/'
 
-# enable/disable text logging
-txtlog = "T"
-
 # the first day oplog will show in it's day view. When you hit this date
 # no "<" arrow will be presented. This can also be used to mask testing
 # testing data before you go "live" w/o clearing the DB
