@@ -42,7 +42,15 @@ notify_db_name = "contacts"
 # this list will get used if notify_db_enabled set to false
 # so far jabber.org and livejournal accounts have been tested
 # unfortunately there's a problem accessing gtalk accounts
-xmpp_notified = ['user@jabber.org', 'user@livejournal.com']
+
+# the format is the queue ID followed by a list of addresses
+# if you don't know the queue ID you can find that via:
+# /opt/oplog/bin/queues/show_queues
+
+xmpp_notified = {
+1: ['user@jabber.org', 'user@livejournal.com'],
+2: ['foo@jabber.org', 'bar@jabber.org']
+}
 
 # XMPP username and password of account that will be doing the IMing
 xmpp_username = "user@jabber.org/Work"

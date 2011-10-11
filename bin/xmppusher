@@ -33,9 +33,9 @@ lastmsg = server.getlastmsg(queue)[0][0]
 
 # get the old last message and update it with the new last message
 opdb = opdb.opdb()
-sql = "select lastmsg from xmppusherlm where queue = %d" % (queue)
+sql = "select lastmsg from xmppusherlm where queue = %d" % (int(queue))
 currentmsg = opdb.select(sql)[0][0]
-sql = "update xmppusherlm set lastmsg=%d where queue=%s" % (lastmsg, queue)
+sql = "update xmppusherlm set lastmsg=%d where queue=%s" % (int(lastmsg), int(queue))
 opdb.insert(sql)
 opdb.close()
 
@@ -70,7 +70,7 @@ if int(currentmsg) != lastmsg:
 	  conn.close()
 	# or from a the list in oplog.py
         else:
-	  xmpp_notify_list = oplog.xmpp_notified
+	  xmpp_notify_list = oplog.xmpp_notified[int(queue)]
 	
 	# then send the message to each 
 	for xmppnotified in xmpp_notify_list:
@@ -103,7 +103,3 @@ if int(currentmsg) != lastmsg:
 	      sys.exit()
 	  id=cl.send(xmpp.protocol.Message(tojid,text))
 	  cl.disconnect()
-    # update the cache file with the latest message ID I posted
-    cachehandle = open(cachefile, 'w')
-    cachehandle.write(str(lastmsg))
-    cachehandle.close()
