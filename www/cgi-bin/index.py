@@ -33,13 +33,17 @@ def mainlinks():
    print '| <a href="?action=feed&queue=%s">RSS Feed</a>' % (str(queue))
    print "</td></tr></table><p>"
 
-# shared top and bottom elements of all pages
-def header():
+def displayqueues():
   print "<b>Queues:</b>"
   qs = opdb.select("select * from queues")
   for x in range(0,len(qs)):
         print "<a href=\"index.py?queue=%s\">%s</a> | " % (str(qs[x][0]),qs[x][2])
   print "<p>"
+
+
+# shared top and bottom elements of all pages
+def header():
+  displayqueues()
   mainlinks()
   print "<table border=0 cellpadding=0 cellspacing=0 width=100%>"
   print "<tr><td width=5%>&nbsp;</td>"
@@ -135,10 +139,7 @@ def feed():
 # display a single message by ID
 def show():
   # make sure they gave us a message ID to show
-  if test_form < 2:
-    print "<h1>Error retrieving message id.</h1>"
-    mainlinks()
-  else :
+  if 'msgid' in form:
     # get the mesage ID from the GET to the cgi
     msgid = form['msgid'].value
     print "<h1>%s: Messages Number - %s</h1>" % (qtitle, msgid)
@@ -153,6 +154,9 @@ def show():
     print "<b>Message Body:</b><br>\n"
     print "<pre>" + result[0][4] + "</pre><p>\n"
     footer()
+  else:
+    print "<h1>Error retrieving message id.</h1>"
+    mainlinks()
 
 # display messages by day. 
 # if no date provided, assume today
@@ -198,7 +202,9 @@ def day():
 def search():
   print "<form action=\"index.py\" method=\"post\">\n"
   print "<input type=hidden name=action value=searchsub>"
+  print "<input type=hidden name=queue value=%s>" % (queue)
   print "<h1>%s Search:</h1>\n" % (qtitle)
+  displayqueues()
   mainlinks()
   print "<INPUT TYPE=text SIZE=30 MAXLENGTH=100 NAME=keyword><br>\n"
   print "[ Date search format: Y-M-D h:m:s ]<p>\n"

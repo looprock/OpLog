@@ -5,9 +5,7 @@
 # if you don't use /opt/oplog as your base directory
 basedir = "/opt/oplog/"
 # URL prefix uses for oplog, i.e. http://your.server/oplog/
-baseurl = "http://[your.url.here]/oplog/"
-# temp location
-tmpdir = basedir + 'tmp/'
+baseurl = "http://10.211.55.19/oplog/"
 # where to store mime attachments
 attachdir = basedir + 'www/html/attachments/'
 
@@ -21,8 +19,8 @@ oplog_start_date = "2007-09-08"
 # to use unix socket, set db_host "localhost" and db_port "3306"
 db_host = "localhost"
 db_port = "3306"
-db_username = "oploguser"
-db_password = "oplogpass"
+db_username = "oplog"
+db_password = "oplog"
 db_name = "oplog"
 
 # Notification settings
@@ -55,16 +53,8 @@ xmpp_security = 'F'
 # Mail settings
 
 # mail relay (can be localhost)
-mailhost="mail.com"
+mailhost="localhost"
 # error handler address: were you want error notices to go to
 mailfrom="oplog-errors@mail.com"
 # addresses you want to receive error notices
 mailerrto="oplog-err-handler@mail.com"
-
-# Error collection Settings
-
-# local mailbox file written to if parser fails.
-# DEFAULT in .profmailrc
-mailbox_file="/home/oplog/mail/mbox"
-# LOGFILE in .profmailrc
-mailbox_log="/home/oplog/.mailproc/log"

@@ -7,5 +7,5 @@ opdb = opdb.opdb()
 sql = "select * from queues"
 result = opdb.select(sql)
 for x in range(0,len(result)):
-	print "Id: %s,\tDatabase Name: %s,\tDatabase Title: %s" % (result[x][0], result[x][1], result[x][2])
+	print "Id: %s,\tDatabase Name: %s,\tQueue Title: %s" % (result[x][0], result[x][1], result[x][2])
 opdb.close()

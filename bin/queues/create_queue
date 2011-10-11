@@ -13,4 +13,7 @@ import oplog
 import opdb
 opdb = opdb.opdb()
 opdb.createqueue(sys.argv[1],sys.argv[2])
+lastid = opdb.select("select id from queues order by id DESC LIMIT 1")[0][0]
+sql = "insert into xmppusherlm values (%s, 0)" % lastid
+opdb.insert(sql)
 opdb.close()

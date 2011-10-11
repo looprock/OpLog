@@ -13,6 +13,7 @@ queue = sys.argv[1]
 
 sys.path.append('/opt/oplog/conf')
 import oplog
+import opdb
 
 # set up handler for emailing errors
 def errmailer(subtype, errString):
@@ -26,25 +27,17 @@ def errmailer(subtype, errString):
   server.sendmail(oplog.mailfrom, [oplog.mailerrto], msg.as_string())
   server.quit()
 
-cachefile = oplog.tmpdir + "xmppusher.cache." + queue
-
 # as the soap service what the last message ID is
 server = xmlrpclib.Server(oplog.baseurl + 'cgi-bin/oplog_server.py')
 lastmsg = server.getlastmsg(queue)[0][0]
 
-result = os.path.exists(cachefile)
-
-# create a cache file if one doesn't exist
-# get the last message ID we looked at
-if result != 1:
-    cachehandle = open(cachefile, 'w')
-    cachehandle.write(str(lastmsg))
-    cachehandle.close()
-    sys.exit(0)
-
-cachehandle = open(cachefile, 'r')
-currentmsg = cachehandle.readline()
-cachehandle.close()
+# get the old last message and update it with the new last message
+opdb = opdb.opdb()
+sql = "select lastmsg from xmppusherlm where queue = %d" % (queue)
+currentmsg = opdb.select(sql)[0][0]
+sql = "update xmppusherlm set lastmsg=%d where queue=%s" % (lastmsg, queue)
+opdb.insert(sql)
+opdb.close()
 
 # if the cached message ID and message ID from the soap service don't match
 # construct a list of all new messages

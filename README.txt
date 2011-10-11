@@ -28,7 +28,7 @@ only need to add the appropriate e-mail address as a recipient.
 Requirements:
 
 python >= 2.3.4
-apache (for the cgi)
+apache with cgi support
 python MySQLdb
 sendmail (but really any MTA will work)
 (python xmpppy and pydns for xmpp based notification)
@@ -37,12 +37,13 @@ sendmail (but really any MTA will work)
 
 Installation:
 
-1. put contents in /opt/oplog (or symlink or whatever)
+1. put contents in /opt/oplog (or symlink)
 
 2. configure mysql DB (something like...):
 mysqladmin -u root -p create oplog
+then log into mysql and run:
 GRANT ALL ON oplog.* TO oplog@localhost IDENTIFIED BY 'password_here';
-mysql -u oplog -p oplog < /opt/oplog/helpers/create.sql
+flush privileges;
 
 3. configure oplog.py:
 This is the main configuration file used by all the components of oplog.
@@ -50,6 +51,7 @@ This MUST live under /opt/oplog/conf/oplog.py. Depending on what features
 you want, you might not need to configure the whole thing to get rolling, 
 i.e. if you don't enable the xmpp pusher script in cron that section isn't
 needed.
+Lastly, run: /opt/oplog/bin/setup.py to populate the database.
 
 4. configure sendmail:
 Assuming you're using smrsh, symlink /opt/oplog/bin/oplog_mailparser.py
