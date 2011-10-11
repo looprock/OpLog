@@ -13,3 +13,4 @@ import opdb
 opdb = opdb.opdb()
 sql = "update queues set title='%s' where id='%s'" % (sys.argv[2],sys.argv[1])
 opdb.insert(sql)
+opdb.close()

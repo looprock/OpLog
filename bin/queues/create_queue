@@ -13,3 +13,4 @@ import oplog
 import opdb
 opdb = opdb.opdb()
 opdb.createqueue(sys.argv[1],sys.argv[2])
+opdb.close()

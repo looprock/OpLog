@@ -61,12 +61,27 @@ class opdb(object):
 		curs.execute(sql)
 		self.conn.commit()
 		sql = """create table %s (
-id int(100) auto_increment NOT NULL,
+recordid int(100) auto_increment NOT NULL,
 recdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 mailfrom varchar(200) NOT NULL,
 maildate varchar(50) NOT NULL,
 msgsubject TEXT NOT NULL,
 msgbody LONGTEXT NOT NULL,
-PRIMARY KEY (id));""" % dbname
+PRIMARY KEY (recordid));""" % dbname
+		curs.execute(sql)
+		self.conn.commit()
+
+	def setup(self):
+		curs = self.conn.cursor()
+		sql = """create table queues (
+id int(100) auto_increment NOT NULL,
+dbname varchar(50) NOT NULL,
+title varchar(50) NOT NULL,
+PRIMARY KEY(id));"""
+		curs.execute(sql)
+		self.conn.commit()
+		sql = """ create table xmppusherlm (
+queue int(10) NOT NULL,
+lastmsg int(100));"""
 		curs.execute(sql)
 		self.conn.commit()

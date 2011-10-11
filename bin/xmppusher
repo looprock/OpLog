@@ -26,7 +26,7 @@ def errmailer(subtype, errString):
   server.sendmail(oplog.mailfrom, [oplog.mailerrto], msg.as_string())
   server.quit()
 
-cachefile = oplog.tmpdir + "pyLogger.cache"
+cachefile = oplog.tmpdir + "xmppusher.cache." + queue
 
 # as the soap service what the last message ID is
 server = xmlrpclib.Server(oplog.baseurl + 'cgi-bin/oplog_server.py')

@@ -87,7 +87,7 @@ def default():
   print "<h1>%s: Last 10 Messages</h1>" % (qtitle)
   header()
   # select the 10 most current entries from oplog db and show them
-  sql ="select msgsubject, mailfrom, recdate, maildate, msgbody, id from " + dbname + " where mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%' order by recdate desc LIMIT 10"
+  sql ="select msgsubject, mailfrom, recdate, maildate, msgbody, recordid from " + dbname + " where mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%' order by recdate desc LIMIT 10"
   result = opdb.select(sql)
   # we already know there will be 10 entries in the dictionary, so we can cheat
   for n in range (0, 9):
@@ -117,7 +117,7 @@ def feed():
  print "<link>http://tool.yav4.com/iLog</link>\n"
  print "<copyright>this info is confidential yo!</copyright>\n"
  # select the 10 most current entries from oplog db and show them
- sql = "select msgsubject, mailfrom, recdate, maildate, msgbody, id from " + dbname + " where mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%' order by recdate desc LIMIT 10"
+ sql = "select msgsubject, mailfrom, recdate, maildate, msgbody, recordid from " + dbname + " where mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%' order by recdate desc LIMIT 10"
  result = opdb.select(sql)
  # we already know there will be 10 entries in the dictionary, so we can cheat
  for n in range (0, 9):
@@ -144,7 +144,7 @@ def show():
     print "<h1>%s: Messages Number - %s</h1>" % (qtitle, msgid)
     header()
     # select the record for that message ID and display it
-    sql = "select msgsubject, mailfrom, recdate, maildate, msgbody, id from " + dbname + " where id=" + msgid + " and mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%'"
+    sql = "select msgsubject, mailfrom, recdate, maildate, msgbody, recordid from " + dbname + " where recordid=" + msgid + " and mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%'"
     result = opdb.select(sql)
     print "<hr width=50% align=left>\n"
     print "<b><font size=4>-- " + result[0][0] + "</font></b><br>\n"
@@ -176,13 +176,13 @@ def day():
   header()
   print "<br>"
   # select all the record IDs for the requested date
-  sql = "select id from " + dbname + " where mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%' and recdate like '%" + dstamp + "%' order by recdate"
+  sql = "select recordid from " + dbname + " where mailfrom not like '%dsl@looprock.com%' and msgsubject not like '%mailing list memberships reminder%' and recdate like '%" + dstamp + "%' order by recdate"
   result = opdb.select(sql)
   if len(result) != 0:
      # if there are records, display them
      for msgid in result:
         resid = str(msgid[0])
-        sql = "select msgsubject, mailfrom, recdate, maildate, msgbody, id from " + dbname + " where id='" + resid + "' order by id"
+        sql = "select msgsubject, mailfrom, recdate, maildate, msgbody, recordid from " + dbname + " where recordid='" + resid + "' order by recordid"
         recordinfo = opdb.select(sql)
         print "<hr width=50% align=left>\n"
         print "<b><font size=4>-- " + recordinfo[0][0] + "</font></b><br>\n"
@@ -217,13 +217,13 @@ def searchsub():
   print "<h1>%s: Results for - %s</h1><br>\n" % (qtitle, keyword)
   header()
   # select anything and everything that might match
-  select0 = "select id from " + dbname + " where recdate like '%" + keyword + "%' or mailfrom like '%" + keyword + "%' or msgbody like '%" + keyword + "%' or msgsubject like '%" + keyword + "%' or maildate like '%" + keyword + "%' order by recdate desc"
+  select0 = "select recordid from " + dbname + " where recdate like '%" + keyword + "%' or mailfrom like '%" + keyword + "%' or msgbody like '%" + keyword + "%' or msgsubject like '%" + keyword + "%' or maildate like '%" + keyword + "%' order by recdate desc"
   recordids = opdb.select(select0)
   # how many things did we find?
   print "<p>Results: <b>" + str(len(recordids)) + "</b><p>\n"
   # as long as there are some, show them
   if len(recordids) != 0:
-     select1 = "select msgsubject, mailfrom, recdate, maildate, msgbody, id from " + dbname + " where recdate like '%" + keyword + "%' or mailfrom like '%" + keyword + "%' or msgbody like '%" + keyword + "%' or msgsubject like '%" + keyword + "%' or maildate like '%" + keyword + "%' order by recdate desc"
+     select1 = "select msgsubject, mailfrom, recdate, maildate, msgbody, recordid from " + dbname + " where recdate like '%" + keyword + "%' or mailfrom like '%" + keyword + "%' or msgbody like '%" + keyword + "%' or msgsubject like '%" + keyword + "%' or maildate like '%" + keyword + "%' order by recdate desc"
      results = opdb.select(select1)
      for recordinfo in results:
        print "<hr width=50% align=left>\n"

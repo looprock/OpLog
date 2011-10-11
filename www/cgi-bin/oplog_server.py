@@ -11,13 +11,13 @@ class OplogXML(object):
         self.python_string = string
   def getlastmsg(self, queue):
 	self.dbname = opdb.getdbbyid(queue)
-	sql = "select id from %s order by id desc LIMIT 1" % (self.dbname)
+	sql = "select recordid from %s order by recordid desc LIMIT 1" % (self.dbname)
 	result = opdb.select(sql)
 	return result
   def getsubject(self, queue, id):
 	self.dbname = opdb.getdbbyid(queue)
 	# present the subject for the requested record ID
-        sql = "select msgsubject from %s where id = '%s'" % (self.dbname, id)
+        sql = "select msgsubject from %s where recordid = '%s'" % (self.dbname, id)
         result = opdb.select(sql)
         return result
 if __name__=='__main__':
