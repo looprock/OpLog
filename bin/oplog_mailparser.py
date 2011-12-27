@@ -3,7 +3,7 @@
 # http://docs.python.org/library/email.message.html
 # http://docs.python.org/library/email-examples.html
 import sys, email, re, os, difflib, smtplib, string, datetime, mimetypes
-from time import gmtime, strftime
+from time import localtime, strftime
 
 errMsg = 'Usage: ' + sys.argv[0] + ' [queue ID]'
 testres = len(sys.argv)
@@ -22,9 +22,9 @@ if debugmode != "T":
 import oplog
 import opdb
 
-logdate = strftime("%Y%m%d", gmtime())
+logdate = strftime("%Y%m%d", localtime())
 oplogfile = oplog.basedir + "logs/opLog-" + logdate + ".log"
-recdate = strftime("%a, %d %b %Y %H:%M:%S %Z", gmtime())
+recdate = strftime("%a, %d %b %Y %H:%M:%S %Z", localtime())
 
 def degbu(string):
 	if debugmode == "T":
