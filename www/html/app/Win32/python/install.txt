@@ -1,0 +1,27 @@
+Install python:
+http://python.org
+
+Install Python Win32 Extensions:
+http://python.net/crew/mhammond/win32/Downloads.html
+
+Install snarl:
+http://www.fullphat.net/
+[ Note: This will also install melon ]
+
+Install PySnarl
+http://code.google.com/p/pysnarl/
+[ Note: I ended up having to install from cmd.exe with "python setup.py install" ]
+
+copy opLogger.py to C:\opLog
+
+Run it every minute:
+
+from cmd.exe, run - 
+schtasks /Create /tn ilogger /tr "C:\python25\pythonw.exe C:\opLog\opLogger.py" /sc Minute /mo 1
+(Thanks Steve!)
+
+Last tested under windows Vista 64-bit with:
+python-2.5.1
+pywin32-212.win32-py2.5
+snarl-2.06
+PySnarl-1.0.2

@@ -1,27 +1,29 @@
 #!/usr/bin/env python
-# version: 2.0.0
+# version: 1.0.0
 # http://docs.python.org/library/email.message.html
 # http://docs.python.org/library/email-examples.html
 import sys, email, re, os, difflib, smtplib, string, datetime, mimetypes
 from time import localtime, strftime
-from pyelasticsearch import ElasticSearch
-import json
 
-errMsg = 'Usage: ' + sys.argv[0] + ' [queue name]'
+errMsg = 'Usage: ' + sys.argv[0] + ' [queue ID]'
 testres = len(sys.argv)
 if testres < 2:
  print errMsg
  sys.exit(1)
 
-queue = sys.argv[1]
+mid = sys.argv[1]
 
 debugmode = "F"
 
-sys.path.append('../conf')
+if debugmode != "T":
+	# disabled because sometimes I test this from different locations
+	sys.path.append('/opt/oplog/conf')
+
 import oplog
+import opdb
 
 logdate = strftime("%Y%m%d", localtime())
-oplogfile = oplog.logdir + "/opLog-" + logdate + ".log"
+oplogfile = oplog.basedir + "logs/opLog-" + logdate + ".log"
 recdate = strftime("%a, %d %b %Y %H:%M:%S %Z", localtime())
 
 def degbu(string):
@@ -90,17 +92,20 @@ else:
 	load = msg.get_payload()
 
 payload = load.rstrip("\n")
-# attachment strings aren't sanitized, so we're doing this to keep them from breaking anything
+# attachment strings aren't sanitized, so we're doing this to keep them from breaking the DB
 payload = payload.replace("'", "&#039;")
 
-# write the message to elasticsearch
+# write the message to the database
 if debugmode != "T":
-	x = {'sent': msgdate, 'from': msgfrom, 'subject': msgsubject, 'body': payload }
-	es = ElasticSearch('http://localhost:9200/')
-	print json.dumps(x)
-	es.index("oplog", queue, x)
+	opdb = opdb.opdb()
+	dbname = opdb.getdbbyid(mid)
+	sql = "insert %s (maildate, mailfrom, msgsubject, msgbody) values ('%s', '%s', '%s', '%s')" % (dbname, msgdate, msgfrom, msgsubject, payload)
+	opdb.insert(sql)
+	opdb.close()
 
-if oplog.txtlog == 'T':
+txtlog = 'F'
+#if oplog.txtlog == 'T':
+if txtlog == 'T':
 	# write the message to the text log
 	# we're reconstructing variables here because the formatting is different
 	logsubject = msg['Subject']

@@ -1,0 +1,17 @@
+body {
+        background: #0A1215 url(oplog_logo.png) no-repeat;
+        font-family: arial;
+        word-spacing: 1px;
+}
+
+content {
+        postition: relative;
+        top: 490px;
+        left: 165px;
+        width: 480px;
+}
+
+h1 {
+	font: small-caps bold italic 2.5em;
+	color: #525b5e;
+}
