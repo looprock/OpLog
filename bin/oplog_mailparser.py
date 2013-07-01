@@ -3,7 +3,7 @@
 # http://docs.python.org/library/email.message.html
 # http://docs.python.org/library/email-examples.html
 import sys, email, re, os, difflib, smtplib, string, datetime, mimetypes
-from time import localtime, strftime
+from time import localtime, strftime,gmtime
 from pyelasticsearch import ElasticSearch
 import json
 
@@ -23,6 +23,7 @@ import oplog
 logdate = strftime("%Y%m%d", localtime())
 oplogfile = oplog.logdir + "/opLog-" + logdate + ".log"
 recdate = strftime("%a, %d %b %Y %H:%M:%S %Z", localtime())
+subdate = strftime("%Y-%m-%dT%H:%M:%S", localtime())
 
 def degbu(string):
 	if debugmode == "T":
@@ -95,8 +96,8 @@ payload = payload.replace("'", "&#039;")
 
 # write the message to elasticsearch
 if debugmode != "T":
-	x = {'sent': msgdate, 'from': msgfrom, 'subject': msgsubject, 'body': payload }
-	es = ElasticSearch('http://localhost:9200/')
+	x = {'submitted': subdate, 'sent': msgdate, 'from': msgfrom, 'subject': msgsubject, 'body': payload }
+	es = ElasticSearch(oplog.elasticsearch)
 	print json.dumps(x)
 	es.index("oplog", queue, x)
 
