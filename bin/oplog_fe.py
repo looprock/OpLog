@@ -87,7 +87,7 @@ def showqueue(q, sdate=d, fcount=0):
 		shownext = 'F'
 	else:
 		shownext = 'T'
-	dates = [ str(pdate).split()[0], str(d), str(edate).split()[0], shownext ]
+	dates = [ str(pdate).split()[0], str(d), str(edate).split()[0], shownext, str(sdate).split()[0] ]
 	w = [ q, len(qt)]
 	x = es.search(query, index='oplog', doc_type=q)
 	y = [ w, x, dates, fcount ]

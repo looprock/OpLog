@@ -9,10 +9,11 @@
                 <input type="submit" value="search" />
               </form>
 
-<h1>{{res[0][0]}}</h1>
-<a href="/oplog/{{res[0][0]}}/{{res[2][0]}}"> Previous </a>
+<h1>Queue: {{res[0][0]}}</h1>
+<b>Date: {{str(res[2][4])}}</b><p>
+<a href="/oplog/{{res[0][0]}}/{{res[2][0]}}"> < - Older </a>
 %if res[2][3] == 'T':
-	| <a href="/oplog/{{res[0][0]}}/{{res[2][2]}}"> Next </a>
+	| <a href="/oplog/{{res[0][0]}}/{{res[2][2]}}"> Newer -> </a>
 %end
 <p>
 %for i in res[1]['hits']['hits']:
