@@ -36,8 +36,12 @@ TEMPLATE_PATH.insert(0,opbindir + "/views")
 @route('/')
 def typelist():
 	x = []
-	for i in es.get_mapping(index='oplog')['oplog']:
-		x.append(i)
+	try:
+		for i in es.get_mapping(index='oplog')['oplog']:
+			x.append(i)
+	except:
+		return "ERROR: you haven't set up any queues yet!"
+		sys.exit()
 	# if there's only one queue, skip the queues list for /
 	if len(x) == 1:
 		qname = "/oplog/%s" % (x[0])
