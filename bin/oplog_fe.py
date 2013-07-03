@@ -2,11 +2,9 @@
 import sys
 import os
 import json
-from ConfigParser import SafeConfigParser
 from pyelasticsearch import ElasticSearch
 from datetime import date, timedelta, datetime
-
-d=date.today()
+from ConfigParser import SafeConfigParser
 
 config = "/etc/oplog/oplog.cnf"
 if os.path.exists(config):
@@ -16,18 +14,19 @@ else:
 	print "No config file found! Please create: %s" % config
 	sys.exit(1)
 
+basedir = parser.get('default', 'basedir').strip('"').strip("'")
+elasticsearch = parser.get('default', 'elasticsearch').strip('"').strip("'")
+
+d=date.today()
+
 # this needs to move to /etc/oplog or something
-oproot = '/var/www/wsgi/OpLog'
-opconfdir = "%s/conf" % (oproot)
-sys.path.append(opconfdir)
-import oplog
 
 # Change working directory so relative paths (and template lookup) work again
-opbindir = "%s/bin" % (oproot)
+opbindir = "%s/bin" % (basedir)
 root = os.path.join(opbindir)
 sys.path.insert(0, root)
 
-es = ElasticSearch(oplog.elasticsearch)
+es = ElasticSearch(elasticsearch)
 
 from bottle import route, run, get, abort, post, request, template, redirect, default_app, debug, TEMPLATE_PATH
 

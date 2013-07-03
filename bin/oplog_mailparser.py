@@ -7,6 +7,27 @@ from time import localtime, strftime,gmtime
 from pyelasticsearch import ElasticSearch
 import json
 
+from ConfigParser import SafeConfigParser
+
+config = "/etc/oplog/oplog.cnf"
+if os.path.exists(config):
+        parser = SafeConfigParser()
+        parser.read(config)
+else:
+        print "No config file found! Please create: %s" % config
+        sys.exit(1)
+
+basedir = parser.get('default', 'basedir').strip('"').strip("'")
+baseurl = parser.get('default', 'baseurl').strip('"').strip("'")
+elasticsearch = parser.get('default', 'elasticsearch').strip('"').strip("'")
+txtlog = parser.get('default', 'txtlog').strip('"').strip("'")
+
+# where to store mime attachments
+attachdir = basedir + "/www/html/attachments/"
+
+# where to store logs if we keep them
+logdir = basedir + "/logs"
+
 errMsg = 'Usage: ' + sys.argv[0] + ' [queue name]'
 testres = len(sys.argv)
 if testres < 2:
@@ -17,11 +38,8 @@ queue = sys.argv[1]
 
 debugmode = "F"
 
-sys.path.append('../conf')
-import oplog
-
 logdate = strftime("%Y%m%d", localtime())
-oplogfile = oplog.logdir + "/opLog-" + logdate + ".log"
+oplogfile = logdir + "/opLog-" + logdate + ".log"
 recdate = strftime("%a, %d %b %Y %H:%M:%S %Z", localtime())
 subdate = strftime("%Y-%m-%dT%H:%M:%S", localtime())
 
@@ -73,19 +91,19 @@ if msg.is_multipart() == True:
 			else:
 				shortname = "part"
 			degbu("DEBUG SHORTNAME: " + shortname)
-			newfile = "%s%s-%d%s" % (oplog.attachdir, shortname, counter, shortext)
+			newfile = "%s%s-%d%s" % (attachdir, shortname, counter, shortext)
 			degbu("DEBUG newfile: " + newfile)
 			while os.path.exists(newfile) == True:
 				degbu("DEBUG newfile: " + newfile + " exists. Incrementing")
 				counter = counter +1
-				newfile = "%s%s-%d%s" % (oplog.attachdir, shortname, counter, shortext)
+				newfile = "%s%s-%d%s" % (attachdir, shortname, counter, shortext)
 			newshort = "%s-%d%s" % (shortname, counter, shortext)
 			degbu("DEBUG newfile: " + newfile)
 			fp = open(newfile, 'w')
 			fp.write(part.get_payload(decode=True))
 			fp.close()
 			os.chmod(newfile, 0644)
-			filestring = 'Attachment: <a href="%sattachments/%s">%s</a><br>\n' % (oplog.baseurl, newshort, newshort)
+			filestring = 'Attachment: <a href="%sattachments/%s">%s</a><br>\n' % (baseurl, newshort, newshort)
 			load += filestring
 else:
 	load = msg.get_payload()
@@ -97,11 +115,11 @@ payload = payload.replace("'", "&#039;")
 # write the message to elasticsearch
 if debugmode != "T":
 	x = {'submitted': subdate, 'sent': msgdate, 'from': msgfrom, 'subject': msgsubject, 'body': payload }
-	es = ElasticSearch(oplog.elasticsearch)
+	es = ElasticSearch(elasticsearch)
 	print json.dumps(x)
 	es.index("oplog", queue, x)
 
-if oplog.txtlog == 'T':
+if txtlog == 'T':
 	# write the message to the text log
 	# we're reconstructing variables here because the formatting is different
 	logsubject = msg['Subject']

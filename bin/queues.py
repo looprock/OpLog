@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 import sys
 import time
+from ConfigParser import SafeConfigParser
+
+config = "/etc/oplog/oplog.cnf"
+if os.path.exists(config):
+        parser = SafeConfigParser()
+        parser.read(config)
+else:
+        print "No config file found! Please create: %s" % config
+        sys.exit(1)
+
+elasticsearch = parser.get('default', 'elasticsearch').strip('"').strip("'")
 
 input = len(sys.argv)
 if input < 2:
@@ -10,9 +21,7 @@ else:
 	qname = sys.argv[1]
 
 from pyelasticsearch import ElasticSearch
-sys.path.append('../conf')
-import oplog
-es = ElasticSearch(oplog.elasticsearch)
+es = ElasticSearch(elasticsearch)
 
 try:
 	s = es.status('oplog')
