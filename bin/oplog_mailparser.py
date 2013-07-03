@@ -23,7 +23,7 @@ elasticsearch = parser.get('default', 'elasticsearch').strip('"').strip("'")
 txtlog = parser.get('default', 'txtlog').strip('"').strip("'")
 
 # where to store mime attachments
-attachdir = basedir + "/www/html/attachments/"
+attachdir = basedir + "/attachments/"
 
 # where to store logs if we keep them
 logdir = basedir + "/logs"
