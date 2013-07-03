@@ -1,19 +1,16 @@
 <html>
 
+<a href="/oplog/{{res[0]}}">Return to {{res[0]}} queue</a> | 
 %if res[0][1] > 1:
         <a href="/oplog">Queue List</a> <p>
 %end
 
-<form method="POST" action="/oplog/{{res[0][0]}}/search">
+<form method="POST" action="/oplog/{{res[0]}}/search">
                 <input name="sstring"     type="text" />
                 <input type="submit" value="search" />
               </form>
 
-<h1>{{res[0][0]}}</h1>
-<a href="/oplog/{{res[0][0]}}/{{res[2][0]}}"> Previous </a>
-%if res[2][3] == 'T':
-	| <a href="/oplog/{{res[0][0]}}/{{res[2][2]}}"> Next </a>
-%end
+<h1>Search Results: {{res[2]}}</h1>
 <p>
 %for i in res[1]['hits']['hits']:
 	<h3>{{i['_source']['subject']}}</h3>

@@ -83,7 +83,7 @@ def showqueue(q, sdate=d, fcount=0):
 		],
 		"facets": {}
 	}	
-	if sdate == d:
+	if str(sdate).split()[0] == str(d):
 		shownext = 'F'
 	else:
 		shownext = 'T'
@@ -92,6 +92,15 @@ def showqueue(q, sdate=d, fcount=0):
 	x = es.search(query, index='oplog', doc_type=q)
 	y = [ w, x, dates, fcount ]
         return template('showqueue',  res=y)
+
+@post('/<q>/search')
+def search_submit(q):
+	sstring = request.forms.get('sstring')
+	sphrase = "body:%s OR subject:%s OR from:%s" % (sstring, sstring, sstring)
+	r = es.search(sphrase, index='oplog', doc_type=q)
+	s = [q, r, sstring]
+	return template('searchres', res=s)
+
 
 #run(host='0.0.0.0', port=8080, debug=True)
 debug(True)
