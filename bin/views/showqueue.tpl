@@ -1,4 +1,5 @@
 <html>
+<head><title>OpLog: {{res[0][0]}}</title><meta http-equiv="refresh" content="60"></head>
 
 %if res[0][1] > 1:
         <a href="/oplog">Queue List</a> <p>
@@ -16,12 +17,22 @@
 	| <a href="/oplog/{{res[0][0]}}/{{res[2][2]}}"> Newer -> </a>
 %end
 <p>
+%count  = 1
 %for i in res[1]['hits']['hits']:
+	%count = count + 1
 	<h3>{{i['_source']['subject']}}</h3>
-	<b>From:</b> {{i['_source']['from']}}<br>
+	<b>From:</b> {{!i['_source']['from']}}<br>
 	<b>Sent:</b> {{i['_source']['sent']}}<br>
 	<b>Received:</b> {{i['_source']['submitted']}}<p>
-	{{i['_source']['body']}}<p>
-	--------------------------------------------------------------------<p>
+	{{!i['_source']['body']}}<p>
+	<hr><p>
 %end
+Total results: {{str(count)}}<p>
+%if count == 50:
+        <a href="/oplog/{{res[0][0]}}/{{res[2][1]}}/{{str(int(res[3]) + 50)}}">Next 50</a>
+%end
+%if int(res[3]) > 50:
+        <a href="/oplog/{{res[0][0]}}/{{res[2][1]}}/{{str(int(res[3]) - 50)}}"> | Previous 50</a>
+%end
+<p>
 </html>
