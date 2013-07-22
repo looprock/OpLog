@@ -19,7 +19,7 @@
 	<b>From:</b> {{i['_source']['from']}}<br>
 	<b>Sent:</b> {{i['_source']['sent']}}<br>
 	<b>Received:</b> {{i['_source']['submitted']}}<p>
-	{{!i['_source']['body']}}<p>
+	<pre>{{!i['_source']['body']}}</pre><p>
 	--------------------------------------------------------------------<p>
 %end
 Total results: {{str(count)}}<p>

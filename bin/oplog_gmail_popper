@@ -1,0 +1,99 @@
+#!/usr/bin/env python
+import poplib
+import email
+import string
+import os
+import mimetypes
+from pyelasticsearch import ElasticSearch
+from ConfigParser import SafeConfigParser
+from time import localtime, strftime,gmtime
+import json
+
+subdate = strftime("%Y-%m-%dT%H:%M:%S", localtime())
+
+config = "/etc/oplog/oplog.cnf"
+if os.path.exists(config):
+        parser = SafeConfigParser()
+        parser.read(config)
+else:
+        print "No config file found! Please create: %s" % config
+        sys.exit(1)
+
+basedir = parser.get('default', 'basedir').strip('"').strip("'")
+baseurl = parser.get('default', 'baseurl').strip('"').strip("'")
+elasticsearch = parser.get('default', 'elasticsearch').strip('"').strip("'")
+gmailuser = parser.get('default', 'gmailuser').strip('"').strip("'")
+gmailpass = parser.get('default', 'gmailpass').strip('"').strip("'")
+
+attachdir = "%s/attachments/" % basedir
+
+try:
+	queue = parser.get('default', 'queue').strip('"').strip("'")
+except:
+	queue = 'ops'
+
+def sanitize(txt):
+        txt = txt.replace("&", "&amp;")
+        txt = txt.replace('<', '&lt;')
+        txt = txt.replace('>', '&gt;')
+        txt = txt.replace('"', '&quot;')
+        txt = txt.replace("'", "&#039;")
+        return txt
+
+M = poplib.POP3_SSL('pop.googlemail.com', '995')
+M.user(gmailuser)
+M.pass_(gmailpass)
+numMessages = len(M.list()[1])
+for i in range(numMessages):
+    #print "=" * 40
+    mail = M.retr(i+1)
+    str = string.join(mail[1], "\n")
+    msg = email.message_from_string(str)
+
+    okcontent = ["text/plain", "text/html"]
+    if msg.is_multipart():
+        counter = 1
+        load = ""
+        for part in msg.walk():
+                # multipart/* are just containers
+                if part.get_content_maintype() == 'multipart':
+                        continue
+                filename = part.get_filename()
+                if part.get_content_type() in okcontent:
+                        #load += sanitize(part.get_payload())
+                        load += part.get_payload()
+                        load += "\n"
+			#print "DEBUG: ===== load:"
+			#print load
+                else: 
+                        ext = mimetypes.guess_extension(part.get_content_type())
+                        if not ext:
+                                # Use a generic bag-of-bits extension
+                                ext = '.bin'
+                        shortext = filename[-4:]
+                        if filename:
+                                shortname = filename[:-4]
+                        else:
+                                shortname = "part"
+                        newfile = "%s%s-%d%s" % (attachdir, shortname, counter, shortext)
+                        while os.path.exists(newfile) == True:
+                                counter = counter +1
+                                newfile = "%s%s-%d%s" % (attachdir, shortname, counter, shortext)
+                        newshort = "%s-%d%s" % (shortname, counter, shortext)
+                        fp = open(newfile, 'w')
+                        fp.write(part.get_payload(decode=True))
+                        fp.close()
+                        os.chmod(newfile, 0644)
+                        filestring = 'Attachment: <a href="%sattachments/%s">%s</a><br>\n' % (baseurl, newshort, newshort)
+                        load += filestring
+    else:
+        load = msg.get_payload()
+
+    payload = load.rstrip("\n")
+    #print payload
+
+    x = {'submitted': subdate, 'sent': msg["Date"], 'from': msg["From"], 'subject': msg["Subject"], 'body': payload }
+    es = ElasticSearch(elasticsearch)
+    #print json.dumps(x)
+    es.index("oplog", queue, x)
+M.quit()

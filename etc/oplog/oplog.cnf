@@ -5,14 +5,14 @@
 basedir = /var/www/wsgi/OpLog
 
 # URL prefix uses for oplog, i.e. http://your.server/oplog/
-baseurl = "http://10.211.55.19/oplog/"
+baseurl = "http://oplog.company.com/oplog/"
 
 ## logging
 # store logs (T/F)?
-txtlog = T
+txtlog = F
 
 # Elasticsearch
-elasticsearch = http://localhost:9200/
+elasticsearch = http://elasticsearch.company.com:9200/
 
 ## Mail settings
 # mail relay (can be localhost)
@@ -23,3 +23,7 @@ mailfrom = oplog-errors@mail.com
 
 # addresses you want to receive error notices
 mailerrto = oplog-err-handler@mail.com
+
+# gmail pop account:
+gmailuser = foofighter@gmail.com
+gmailpass = xxkdjffdj

@@ -24,14 +24,15 @@
 	<b>From:</b> {{!i['_source']['from']}}<br>
 	<b>Sent:</b> {{i['_source']['sent']}}<br>
 	<b>Received:</b> {{i['_source']['submitted']}}<p>
-	{{!i['_source']['body']}}<p>
+	<pre>{{!i['_source']['body']}}</pre><p>
 	<hr><p>
 %end
+%count = count - 1
 Total results: {{str(count)}}<p>
 %if count == 50:
         <a href="/oplog/{{res[0][0]}}/{{res[2][1]}}/{{str(int(res[3]) + 50)}}">Next 50</a>
 %end
-%if int(res[3]) > 50:
+%if int(res[3]) >= 50:
         <a href="/oplog/{{res[0][0]}}/{{res[2][1]}}/{{str(int(res[3]) - 50)}}"> | Previous 50</a>
 %end
 <p>
