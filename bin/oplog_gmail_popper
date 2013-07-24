@@ -3,6 +3,7 @@ import poplib
 import email
 import string
 import os
+import sys
 import mimetypes
 from pyelasticsearch import ElasticSearch
 from ConfigParser import SafeConfigParser
@@ -26,6 +27,14 @@ gmailuser = parser.get('default', 'gmailuser').strip('"').strip("'")
 gmailpass = parser.get('default', 'gmailpass').strip('"').strip("'")
 
 attachdir = "%s/attachments/" % basedir
+lockfile = "%s/logs/popper.lock" % basedir
+
+if os.path.exists(lockfile):
+        print "ERROR: found lock %s. Exiting!" % lockfile
+        sys.exit()
+else:  
+        with open(lockfile, 'a'):
+                os.utime(lockfile, None)
 
 try:
 	queue = parser.get('default', 'queue').strip('"').strip("'")
@@ -97,3 +106,4 @@ for i in range(numMessages):
     #print json.dumps(x)
     es.index("oplog", queue, x)
 M.quit()
+os.remove(lockfile)
