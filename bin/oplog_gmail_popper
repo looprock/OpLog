@@ -20,24 +20,38 @@ else:
         print "No config file found! Please create: %s" % config
         sys.exit(1)
 
+def usage():
+	print "%s [config directive]" % sys.argv[0]
+	print "RE: %s default" % sys.argv[0]
+	sys.exit()
+
+def removeNonAscii(s): 
+	return "".join(i for i in s if ord(i)<128)
+
+input = len(sys.argv)
+if input < 2:
+	cname = 'default'
+else:
+        cname = sys.argv[1]
+
 basedir = parser.get('default', 'basedir').strip('"').strip("'")
 baseurl = parser.get('default', 'baseurl').strip('"').strip("'")
 elasticsearch = parser.get('default', 'elasticsearch').strip('"').strip("'")
-gmailuser = parser.get('default', 'gmailuser').strip('"').strip("'")
-gmailpass = parser.get('default', 'gmailpass').strip('"').strip("'")
+gmailuser = parser.get(cname, 'gmailuser').strip('"').strip("'")
+gmailpass = parser.get(cname, 'gmailpass').strip('"').strip("'")
 
 attachdir = "%s/attachments/" % basedir
-lockfile = "%s/logs/popper.lock" % basedir
+lockfile = "%s/logs/%s-popper.lock" % (basedir,cname)
 
 if os.path.exists(lockfile):
-        print "ERROR: found lock %s. Exiting!" % lockfile
-        sys.exit()
-else:  
-        with open(lockfile, 'a'):
-                os.utime(lockfile, None)
+	print "ERROR: found lock %s. Exiting!" % lockfile
+	sys.exit()
+else:
+	with open(lockfile, 'a'):
+		os.utime(lockfile, None)
 
 try:
-	queue = parser.get('default', 'queue').strip('"').strip("'")
+	queue = parser.get(cname, 'queue').strip('"').strip("'")
 except:
 	queue = 'ops'
 
@@ -53,6 +67,7 @@ M = poplib.POP3_SSL('pop.googlemail.com', '995')
 M.user(gmailuser)
 M.pass_(gmailpass)
 numMessages = len(M.list()[1])
+#print "numMessages: %s" % str(numMessages)
 for i in range(numMessages):
     #print "=" * 40
     mail = M.retr(i+1)
@@ -74,29 +89,29 @@ for i in range(numMessages):
                         load += "\n"
 			#print "DEBUG: ===== load:"
 			#print load
-                else: 
-                        ext = mimetypes.guess_extension(part.get_content_type())
-                        if not ext:
-                                # Use a generic bag-of-bits extension
-                                ext = '.bin'
-                        shortext = filename[-4:]
-                        if filename:
-                                shortname = filename[:-4]
-                        else:
-                                shortname = "part"
-                        newfile = "%s%s-%d%s" % (attachdir, shortname, counter, shortext)
-                        while os.path.exists(newfile) == True:
-                                counter = counter +1
-                                newfile = "%s%s-%d%s" % (attachdir, shortname, counter, shortext)
-                        newshort = "%s-%d%s" % (shortname, counter, shortext)
-                        fp = open(newfile, 'w')
-                        fp.write(part.get_payload(decode=True))
-                        fp.close()
-                        os.chmod(newfile, 0644)
-                        filestring = 'Attachment: <a href="%sattachments/%s">%s</a><br>\n' % (baseurl, newshort, newshort)
-                        load += filestring
+			# this keeps breaking
+                	#else: 
+                        #ext = mimetypes.guess_extension(part.get_content_type())
+                        #if not ext:
+                        #        # Use a generic bag-of-bits extension
+                        #        ext = '.bin'
+                        #if filename:
+                        #        shortname = filename[:-4]
+                        #else:
+                        #        shortname = "part"
+                        #newfile = "%s%s-%s-%d%s" % (attachdir, cname, shortname, counter, ext)
+                        #while os.path.exists(newfile) == True:
+                        #        counter = counter +1
+                        #        newfile = "%s%s-%s-%d%s" % (attachdir, cname, shortname, counter, ext)
+                        #newshort = "%s-%s-%d%s" % (cname, shortname, counter, ext)
+                        #fp = open(newfile, 'w')
+                        #fp.write(part.get_payload(decode=True))
+                        #fp.close()
+                        #os.chmod(newfile, 0644)
+                        #filestring = 'Attachment: <a href="%sattachments/%s">%s</a><br>\n' % (baseurl, newshort, newshort)
+                        #load += filestring
     else:
-        load = msg.get_payload()
+        load = removeNonAscii(msg.get_payload())
 
     payload = load.rstrip("\n")
     #print payload
